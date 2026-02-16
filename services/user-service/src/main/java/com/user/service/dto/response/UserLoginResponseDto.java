@@ -3,10 +3,10 @@ package com.user.service.dto.response;
 import lombok.Data;
 
 @Data
-public class UserRegisterResponseDto {
+public class UserLoginResponseDto {
     private Long id;
-    private String name;
-    private String surname;
     private String username;
-    private String email;
+    private String role;
+    private String accessToken;
+
 }
