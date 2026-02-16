@@ -1,7 +1,7 @@
 package com.user.service.mapper;
 
 import com.user.service.dto.request.UserRegisterRequestDto;
-import com.user.service.dto.response.UserRegisterResponseDto;
+import com.user.service.dto.response.UserResponseDto;
 import com.user.service.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,5 +14,5 @@ public interface UserMapper {
     @Mapping(target = "role", expression = "java(com.user.service.enums.UserRoleEnum.STUDENT)")
     UserEntity ToEntityForRegister(UserRegisterRequestDto request);
 
-    UserRegisterResponseDto toRegisterResponse(UserEntity user);
+    UserResponseDto toResponse(UserEntity user);
 }

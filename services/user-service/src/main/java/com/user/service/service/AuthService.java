@@ -3,10 +3,10 @@ package com.user.service.service;
 import com.user.service.dto.request.UserLoginRequestDto;
 import com.user.service.dto.request.UserRegisterRequestDto;
 import com.user.service.dto.response.UserLoginResponseDto;
-import com.user.service.dto.response.UserRegisterResponseDto;
+import com.user.service.dto.response.UserResponseDto;
 
 public interface AuthService {
-    UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto);
+    UserResponseDto register(UserRegisterRequestDto userRegisterRequestDto);
 
     UserLoginResponseDto login(UserLoginRequestDto userLoginRequestDto);
 }

@@ -3,7 +3,7 @@ package com.user.service.controller;
 import com.user.service.dto.request.UserLoginRequestDto;
 import com.user.service.dto.request.UserRegisterRequestDto;
 import com.user.service.dto.response.UserLoginResponseDto;
-import com.user.service.dto.response.UserRegisterResponseDto;
+import com.user.service.dto.response.UserResponseDto;
 import com.user.service.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,8 @@ public class AuthController {
 
 
     @PostMapping("/registration")
-    public ResponseEntity<UserRegisterResponseDto> register(@RequestBody UserRegisterRequestDto request) {
-        UserRegisterResponseDto response = authService.register(request);
+    public ResponseEntity<UserResponseDto> register(@RequestBody UserRegisterRequestDto request) {
+        UserResponseDto response = authService.register(request);
         return ResponseEntity.ok(response);
     }
 

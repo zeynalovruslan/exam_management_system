@@ -8,5 +8,4 @@ public class UserLoginResponseDto {
     private String username;
     private String role;
     private String accessToken;
-
 }
