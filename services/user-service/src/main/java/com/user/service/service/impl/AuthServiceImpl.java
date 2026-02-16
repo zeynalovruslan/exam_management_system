@@ -3,7 +3,7 @@ package com.user.service.service.impl;
 import com.user.service.dto.request.UserLoginRequestDto;
 import com.user.service.dto.request.UserRegisterRequestDto;
 import com.user.service.dto.response.UserLoginResponseDto;
-import com.user.service.dto.response.UserRegisterResponseDto;
+import com.user.service.dto.response.UserResponseDto;
 import com.user.service.entity.UserEntity;
 import com.user.service.enums.UserStatusEnum;
 import com.user.service.exception.BadRequestException;
@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public UserRegisterResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {
+    public UserResponseDto register(UserRegisterRequestDto userRegisterRequestDto) {
 
         if (userRepository.existsByUsername(userRegisterRequestDto.getUsername())) {
             throw new BadRequestException("Username is already using : " + userRegisterRequestDto.getUsername());
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         toEntity.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
         UserEntity savedUser = userRepository.save(toEntity);
 
-        return userMapper.toRegisterResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 
     @Override
