@@ -7,7 +7,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-
 public interface UserMapper {
 
     @Mapping(target="status", expression = "java(com.user.service.enums.UserStatusEnum.ACTIVE)")
