@@ -6,15 +6,15 @@ import com.exam.service.dto.client.request.QuestionSelectionRequestDto;
 import com.exam.service.dto.client.response.QuestionResponseDto;
 import com.exam.service.entity.AttemptEntity;
 import com.exam.service.enums.AttemptStatusEnum;
+import com.exam.service.exception.ConflictException;
+import com.exam.service.exception.UnauthorizedException;
 import com.exam.service.integration.QuestionClient;
 import com.exam.service.repository.AttemptRepository;
 import com.exam.service.service.AttemptService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,6 +22,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AttemptServiceImpl implements AttemptService {
+
+    private static final int DEFAULT_COUNT = 20;
 
     private final AttemptRepository attemptRepository;
     private final QuestionClient questionClient;
@@ -33,17 +35,17 @@ public class AttemptServiceImpl implements AttemptService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || auth.getPrincipal() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+            throw new UnauthorizedException("Unauthorized - authority is cannot be null");
         }
 
         String userId = auth.getPrincipal().toString();
 
         if (userId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+            throw new UnauthorizedException("Unauthorized - user id can not be blank");
         }
 
         if (attemptRepository.existsByUserIdAndStatus(userId, AttemptStatusEnum.STARTED)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Active attempt already exists");
+            throw new ConflictException("Active attempt already exists");
         }
 
         AttemptEntity entity = new AttemptEntity();
@@ -53,8 +55,9 @@ public class AttemptServiceImpl implements AttemptService {
         attemptRepository.save(entity);
 
         QuestionSelectionRequestDto requestDto = new QuestionSelectionRequestDto();
-        requestDto.setCount(20);
+        requestDto.setCount(DEFAULT_COUNT);
         requestDto.setTopic(requestBody.getTopic());
+        requestDto.setDifficulty(requestBody.getDifficulty());
 
         List<QuestionResponseDto> questionResponseDto = questionClient.selectQuestions(requestDto, authHeader);
 

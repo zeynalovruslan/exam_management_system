@@ -13,7 +13,7 @@ import java.util.List;
 @FeignClient(name = "question-service", url = "${services.question-service.base-url}")
 public interface QuestionClient {
 
-    @PostMapping("/question/select")
+    @PostMapping("/api/questions")
     List<QuestionResponseDto> selectQuestions(@RequestBody QuestionSelectionRequestDto requestDto,
                                               @RequestHeader("Authorization") String authorization
     );

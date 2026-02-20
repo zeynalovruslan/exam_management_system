@@ -24,6 +24,9 @@ public class OptionEntity {
     @Column(nullable = false)
     private Integer orderIndex;
 
+    @Column(nullable = false)
+    private Boolean isCorrect;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "question_id", nullable = false)
     private QuestionEntity question;

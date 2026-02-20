@@ -8,28 +8,29 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<QuestionEntity, Long> {
 
     @Query(value = """
-        select q.id
-        from questions q
-        where q.topic = :topic and q.difficulty = :difficulty
-        order by rand()
-        limit 20
-        """, nativeQuery = true)
-    List<Long> findRandomId(@Param("topic") String topic, @Param("difficulty") DifficultyEnum difficulty);
-
-
-
+            select q.id
+            from questions q
+            where q.topic = :topic and q.difficulty = :difficulty
+            order by rand()
+            limit :count
+            """, nativeQuery = true)
+    Optional<List<Long>> findRandomId(@Param("topic") String topic,
+                                      @Param("difficulty") DifficultyEnum difficulty,
+                                      @Param("count") int count);
 
 
     @Query("""
-        select distinct q
-        from QuestionEntity q
-        left join fetch q.options
-        where q.id in :ids
-    """)
-    List<QuestionEntity> findAllByIdInWithOptions(@Param("ids") List<Long> ids);
+                select distinct q
+                from QuestionEntity q
+                left join fetch q.options
+                where q.id in :ids
+            """)
+    Optional<List<QuestionEntity>> findAllByIdInWithOptions(@Param("ids") List<Long> ids);
+
 }

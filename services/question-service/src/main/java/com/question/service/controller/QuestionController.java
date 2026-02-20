@@ -20,7 +20,7 @@ public class QuestionController {
 
     @PostMapping
     public ResponseEntity<List<QuestionResponseDto>> select(@RequestBody QuestionSelectionRequestDto request) {
-        List<QuestionResponseDto> response = questionService.selectQuestion(request);
+       List <QuestionResponseDto> response = questionService.selectQuestion(request);
         return ResponseEntity.ok(response);
     }
 }
