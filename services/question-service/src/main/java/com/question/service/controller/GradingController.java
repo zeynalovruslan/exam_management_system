@@ -2,6 +2,8 @@ package com.question.service.controller;
 
 import com.question.service.dto.api.request.AnswerTotalRequestDto;
 import com.question.service.dto.api.response.AnswerResponseDto;
+import com.question.service.dto.client.request.QuestionGradeRequestDto;
+import com.question.service.dto.client.response.QuestionGradeResponseDto;
 import com.question.service.service.GradingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +21,17 @@ public class GradingController {
 
     private final GradingService gradingService;
 
-    @PostMapping("/grade")
-    public ResponseEntity<AnswerResponseDto> grade(@RequestBody AnswerTotalRequestDto request) {
-        AnswerResponseDto response = gradingService.gradeAnswer(request);
+    @PostMapping("/grade-total")
+    public ResponseEntity<AnswerResponseDto> gradeTotalQuestions(@RequestBody AnswerTotalRequestDto request) {
+        AnswerResponseDto response = gradingService.gradeTotalQuestions(request);
         return ResponseEntity.ok(response);
     }
+
+
+    @PostMapping("/grade")
+    public ResponseEntity<QuestionGradeResponseDto> gradePerQuestions(@RequestBody QuestionGradeRequestDto request) {
+        QuestionGradeResponseDto response = gradingService.gradePerQuestions(request);
+        return ResponseEntity.ok(response);
+    }
+
 }

@@ -1,16 +1,16 @@
 package com.exam.service.dto.api.response;
 
-import com.exam.service.dto.client.response.QuestionResponseDto;
+import com.exam.service.dto.client.response.QuestionSelectionResponseDto;
 import lombok.Data;
 
 import java.time.Instant;
 import java.util.List;
 
 @Data
-public class AttemptResponseDto {
+public class AttemptStartResponseDto {
 
     private Long id;
     private String status;
     private Instant startedAt;
-    private List<QuestionResponseDto> questions;
+    private List<QuestionSelectionResponseDto> questions;
 }

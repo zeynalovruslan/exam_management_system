@@ -1,7 +1,7 @@
 package com.exam.service.controller;
 
 import com.exam.service.dto.api.request.AttemptStartRequestDto;
-import com.exam.service.dto.api.response.AttemptResponseDto;
+import com.exam.service.dto.api.response.AttemptStartResponseDto;
 import com.exam.service.service.AttemptService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +21,9 @@ public class AttemptController {
 
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/start")
-    public ResponseEntity<AttemptResponseDto> start(@RequestHeader("Authorization") String authorization,
-                                                    @RequestBody AttemptStartRequestDto requestDto) {
-        AttemptResponseDto response = attemptService.start(authorization, requestDto);
+    public ResponseEntity<AttemptStartResponseDto> start(@RequestHeader("Authorization") String authorization,
+                                                         @RequestBody AttemptStartRequestDto requestDto) {
+        AttemptStartResponseDto response = attemptService.start(authorization, requestDto);
         return ResponseEntity.ok(response);
     }
 }

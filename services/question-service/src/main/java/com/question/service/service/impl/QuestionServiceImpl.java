@@ -1,7 +1,7 @@
 package com.question.service.service.impl;
 
 import com.question.service.dto.client.request.QuestionSelectionRequestDto;
-import com.question.service.dto.client.response.QuestionResponseDto;
+import com.question.service.dto.client.response.QuestionSelectionResponseDto;
 import com.question.service.entity.QuestionEntity;
 import com.question.service.exception.BadRequestException;
 import com.question.service.exception.NotFoundException;
@@ -22,7 +22,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
     private final QuestionMapper questionMapper;
 
-    public List<QuestionResponseDto> selectQuestion(QuestionSelectionRequestDto request) {
+    public List<QuestionSelectionResponseDto> selectQuestion(QuestionSelectionRequestDto request) {
 
         List<Long> ids = questionRepository.findRandomId(request.getTopic(), request.getDifficulty(), DEFAULT_COUNT).
                 orElseThrow(() -> new NotFoundException("Question ids not found"));
@@ -36,7 +36,7 @@ public class QuestionServiceImpl implements QuestionService {
         return questions.stream().map(questionMapper::toResponse).toList();
 
 //        QuestionEntity question = questionRepository.findByIdAndTopicAndDifficultyWithOptions(1L, request.getTopic(), request.getDifficulty());
-//        QuestionResponseDto responseDto = new QuestionResponseDto();
+//        QuestionSelectionResponseDto responseDto = new QuestionSelectionResponseDto();
 //        responseDto.setId(question.getId());
 //        responseDto.setText(question.getText());
 //

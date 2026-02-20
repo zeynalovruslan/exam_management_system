@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class QuestionResponseDto {
+public class QuestionSelectionResponseDto {
     private Long id;
     private String text;
     private List<OptionDto> options;
