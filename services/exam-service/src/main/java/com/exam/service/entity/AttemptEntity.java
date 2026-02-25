@@ -24,6 +24,8 @@ public class AttemptEntity {
     @Column(nullable = false)
     private AttemptStatusEnum status;
 
+    private Integer score;
+
     @Column(nullable = false)
     private Instant startedAt;
 

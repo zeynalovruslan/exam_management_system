@@ -1,9 +1,12 @@
 package com.exam.service.controller;
 
 import com.exam.service.dto.api.request.AttemptStartRequestDto;
-import com.exam.service.dto.api.response.AttemptResponseDto;
+import com.exam.service.dto.api.request.AttemptSubmitRequestDto;
+import com.exam.service.dto.api.response.AttemptResultResponseDto;
+import com.exam.service.dto.api.response.AttemptStartResponseDto;
+import com.exam.service.dto.api.response.AttemptSubmitResponseDto;
 import com.exam.service.service.AttemptService;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +22,23 @@ public class AttemptController {
         this.attemptService = attemptService;
     }
 
-
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/start")
-    public ResponseEntity<AttemptResponseDto> start(@RequestHeader("Authorization") String authorization,
-                                                    @RequestBody AttemptStartRequestDto requestDto) {
-        AttemptResponseDto response = attemptService.start(authorization, requestDto);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AttemptStartResponseDto> start(@RequestHeader("Authorization") String authorization,
+                                                         @RequestBody AttemptStartRequestDto requestDto) {
+        return ResponseEntity.ok(attemptService.start(authorization, requestDto));
     }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/submit")
+    public ResponseEntity<AttemptSubmitResponseDto> submit(@RequestBody AttemptSubmitRequestDto requestDto) {
+        return ResponseEntity.ok(attemptService.submit(requestDto));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/results/{attemptId}")
+    public ResponseEntity<AttemptResultResponseDto> getResult(@PathVariable Long attemptId) {
+        return ResponseEntity.ok(attemptService.getResult(attemptId));
+    }
+
 }

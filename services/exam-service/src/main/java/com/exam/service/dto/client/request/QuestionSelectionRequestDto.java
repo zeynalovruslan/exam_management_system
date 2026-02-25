@@ -1,5 +1,6 @@
 package com.exam.service.dto.client.request;
 
+import com.exam.service.enums.DifficultyEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,5 @@ import java.util.List;
 public class QuestionSelectionRequestDto {
     private int count;
     private String topic;
-    private String difficulty;
-
-
+    private DifficultyEnum difficulty;
 }
