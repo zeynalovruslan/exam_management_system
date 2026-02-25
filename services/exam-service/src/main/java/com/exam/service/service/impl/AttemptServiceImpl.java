@@ -1,13 +1,25 @@
 package com.exam.service.service.impl;
 
+import com.exam.service.dto.api.request.AnswerDto;
 import com.exam.service.dto.api.request.AttemptStartRequestDto;
+import com.exam.service.dto.api.request.AttemptSubmitRequestDto;
+import com.exam.service.dto.api.response.AttemptResultResponseDto;
 import com.exam.service.dto.api.response.AttemptStartResponseDto;
+import com.exam.service.dto.api.response.AttemptSubmitResponseDto;
+import com.exam.service.dto.api.response.ResultResponse;
+import com.exam.service.dto.client.request.QuestionGradeRequestDto;
+import com.exam.service.dto.client.request.QuestionRequest;
+import com.exam.service.dto.client.request.QuestionResultRequestDto;
 import com.exam.service.dto.client.request.QuestionSelectionRequestDto;
+import com.exam.service.dto.client.response.QuestionGradeResponseDto;
+import com.exam.service.dto.client.response.QuestionResultResponseDto;
 import com.exam.service.dto.client.response.QuestionSelectionResponseDto;
+import com.exam.service.dto.client.response.ResultDto;
 import com.exam.service.entity.AttemptEntity;
 import com.exam.service.entity.AttemptQuestionEntity;
 import com.exam.service.enums.AttemptStatusEnum;
 import com.exam.service.exception.ConflictException;
+import com.exam.service.exception.NotFoundException;
 import com.exam.service.exception.UnauthorizedException;
 import com.exam.service.integration.QuestionClient;
 import com.exam.service.repository.AttemptQuestionRepository;
@@ -20,7 +32,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -81,5 +97,156 @@ public class AttemptServiceImpl implements AttemptService {
         response.setQuestions(questions);
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public AttemptSubmitResponseDto submit(AttemptSubmitRequestDto requestDto) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UnauthorizedException("Unauthorized - authority is cannot be null");
+        }
+
+        String userId = auth.getPrincipal().toString();
+
+        if (userId.isBlank()) {
+            throw new UnauthorizedException("Unauthorized - user id can not be blank");
+        }
+
+        AttemptEntity attemptEntity = attemptRepository.findById(requestDto.getAttemptId()).orElseThrow(() ->
+                new NotFoundException("Attempt with id " + requestDto.getAttemptId() + " not found"));
+
+
+        if (!userId.equals(attemptEntity.getUserId())) {
+            throw new UnauthorizedException("Attempt does not belong to current user");
+        }
+
+        if (attemptEntity.getStatus() != AttemptStatusEnum.STARTED) {
+            throw new ConflictException("Attempt must be STARTED. Current : " + attemptEntity.getStatus());
+        }
+
+        List<AttemptQuestionEntity> attemptQuestionList = attemptQuestionRepository.
+                findByAttemptId(attemptEntity.getId());
+
+        if (attemptQuestionList.isEmpty()) {
+            throw new NotFoundException("Attempt has no questions: " + attemptEntity.getId());
+        }
+
+        Map<Long, AttemptQuestionEntity> attemptQuestionEntityMap = attemptQuestionList.stream().
+                collect(Collectors.toMap(AttemptQuestionEntity::getQuestionId,
+                        attemptQuestionEntity -> attemptQuestionEntity));
+
+        Set<Long> set = new HashSet<>();
+        for (AnswerDto answerDto : requestDto.getAnswers()) {
+            if (!set.add(answerDto.getQuestionId())) {
+                throw new ConflictException("Answer id " + answerDto.getQuestionId() + " is duplicated");
+            }
+        }
+
+        for (AnswerDto answerDto : requestDto.getAnswers()) {
+            AttemptQuestionEntity attemptQuestionEntity = attemptQuestionEntityMap.get(answerDto.getQuestionId());
+            if (attemptQuestionEntity == null) {
+                throw new NotFoundException("Question id " + answerDto.getQuestionId() + " is not part of attempt " + attemptEntity.getId());
+            }
+            attemptQuestionEntity.setSelectedOptionId(answerDto.getSelectedOptionId());
+        }
+        attemptQuestionRepository.saveAll(attemptQuestionList);
+
+        QuestionGradeRequestDto gradeRequestDto = new QuestionGradeRequestDto();
+
+        List<com.exam.service.dto.client.request.AnswerDto> gradeAnswers = attemptQuestionList.stream().map(
+                attemptQuestionEntity -> {
+
+                    com.exam.service.dto.client.request.AnswerDto answerDto = new com.exam.service.dto.client.request.AnswerDto();
+                    answerDto.setQuestionId(attemptQuestionEntity.getQuestionId());
+                    answerDto.setSelectedOptionId(attemptQuestionEntity.getSelectedOptionId());
+                    return answerDto;
+                }
+        ).toList();
+
+        gradeRequestDto.setAnswers(gradeAnswers);
+
+        QuestionGradeResponseDto response = questionClient.grade(gradeRequestDto);
+
+        Map<Long, ResultDto> resultMap = response.getResults().stream()
+                .collect(Collectors.toMap(ResultDto::getQuestionId, r -> r));
+
+        for (AttemptQuestionEntity aq : attemptQuestionList) {
+            ResultDto result = resultMap.get(aq.getQuestionId());
+
+            if (result == null) {
+                throw new IllegalStateException("Missing grade result for question id = " + aq.getQuestionId());
+            }
+            aq.setIsCorrect(result.getIsCorrect());
+            if (Boolean.TRUE.equals(result.getIsCorrect())) {
+                aq.setScore(1);
+            } else {
+                aq.setScore(0);
+            }
+        }
+        attemptQuestionRepository.saveAll(attemptQuestionList);
+
+        attemptEntity.setStatus(AttemptStatusEnum.SUBMITTED);
+        attemptEntity.setSubmittedAt(Instant.now());
+        attemptEntity.setScore(response.getCorrectAnswerCount());
+        attemptRepository.save(attemptEntity);
+
+        Integer totalAnswers = attemptQuestionList.size();
+
+        Integer wrongAnswers = totalAnswers - response.getCorrectAnswerCount();
+
+        AttemptSubmitResponseDto responseDto = new AttemptSubmitResponseDto();
+        responseDto.setAttemptId(attemptEntity.getId());
+        responseDto.setTotalQuestions(totalAnswers);
+        responseDto.setWrongAnswerCount(wrongAnswers);
+        responseDto.setCorrectAnswerCount(response.getCorrectAnswerCount());
+
+        responseDto.setResults(response.getResults());
+
+        return responseDto;
+    }
+
+    @Override
+    public AttemptResultResponseDto getResult(Long attemptId) {
+
+        List<AttemptQuestionEntity> attemptQuestion = attemptQuestionRepository.findByAttemptId(attemptId);
+        if (attemptQuestion.isEmpty()) {
+            throw new NotFoundException("Attempt has no questions: " + attemptId);
+        }
+
+        List<QuestionRequest> questionRequestList = attemptQuestion.stream()
+                .map(attemptQuestionEntity -> {
+                    QuestionRequest questionRequest = new QuestionRequest();
+                    questionRequest.setQuestionId(attemptQuestionEntity.getQuestionId());
+                    questionRequest.setSelectedOptionId(attemptQuestionEntity.getSelectedOptionId());
+                    return questionRequest;
+                }).toList();
+
+        QuestionResultRequestDto requestDto = new QuestionResultRequestDto();
+        requestDto.setRequests(questionRequestList);
+
+        QuestionResultResponseDto questionResult = questionClient.getResult(requestDto);
+
+        List<ResultResponse> questionResponseList = questionResult.getQuestions().stream().map(questionResponse -> {
+            ResultResponse resultResponse = new ResultResponse();
+            resultResponse.setQuestionId(questionResponse.getQuestionId());
+            resultResponse.setQuestionText(questionResponse.getQuestionText());
+            resultResponse.setSelectedOptionId(questionResponse.getSelectedOptionId());
+            resultResponse.setSelectedOptionText(questionResponse.getSelectedOptionText());
+            resultResponse.setCorrectAnswerId(questionResponse.getCorrectAnswerId());
+            resultResponse.setCorrectAnswerText(questionResponse.getCorrectAnswerText());
+            return resultResponse;
+        }).toList();
+
+        AttemptResultResponseDto attemptResultResponseDto = new AttemptResultResponseDto();
+        attemptResultResponseDto.setQuestions(questionResponseList);
+        attemptResultResponseDto.setScore(questionResult.getScore());
+        attemptResultResponseDto.setTotalQuestions(questionResult.getTotalQuestions());
+        attemptResultResponseDto.setWrongAnswerCount(questionResult.getWrongAnswer());
+        attemptResultResponseDto.setCorrectAnswerCount(questionResult.getCorrectAnswer());
+
+        return attemptResultResponseDto;
     }
 }

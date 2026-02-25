@@ -27,13 +27,13 @@ public class AttemptQuestionEntity {
     @Column(name = "question_id", nullable = false)
     private Long questionId;
 
-    @Column(name = "selected_option_id", nullable = false)
+    @Column(name = "selected_option_id", nullable = true)
     private Long selectedOptionId;
 
-    @Column(name = "is_correct", nullable = false)
+    @Column(name = "is_correct", nullable = true)
     private Boolean isCorrect;
 
-    @Column(name = "score", nullable = false)
+    @Column(name = "score", nullable = true)
     private Integer score;
 
     @Column(name = "created_at", nullable = false, updatable = false)

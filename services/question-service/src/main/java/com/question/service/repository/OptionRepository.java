@@ -10,4 +10,8 @@ import java.util.Optional;
 public interface OptionRepository extends JpaRepository<OptionEntity, Long> {
 
     Optional<Boolean> existsByIdAndQuestionIdAndIsCorrectTrue(Long optionId, Long questionId);
+
+    Optional<OptionEntity> findByQuestionIdAndIsCorrectTrue(Long questionId);
+
+    Optional<OptionEntity> findById(Long optionId);
 }

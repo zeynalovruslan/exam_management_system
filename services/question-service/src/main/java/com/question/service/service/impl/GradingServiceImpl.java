@@ -26,14 +26,14 @@ public class GradingServiceImpl implements GradingService {
     @Override
     public AnswerResponseDto gradeTotalQuestions(AnswerTotalRequestDto request) {
 
-        int score = 0;
-        int totalQuestions = request.getAnswers().size();
+        Integer score = 0;
+        Integer totalQuestions = request.getAnswers().size();
 
         for (AnswerItemRequestDto answer : request.getAnswers()) {
-            if (answer.getOptionId() == null || answer.getOptionId() == 0) {
+            if (answer.getSelectedOptionId() == null || answer.getSelectedOptionId() == 0) {
                 throw new BadRequestException("Option id or request id cannot be null");
             }
-            boolean exist = optionRepository.existsByIdAndQuestionIdAndIsCorrectTrue(answer.getOptionId(),
+            boolean exist = optionRepository.existsByIdAndQuestionIdAndIsCorrectTrue(answer.getSelectedOptionId(),
                     answer.getQuestionId()).orElseThrow(() -> new NotFoundException("Option not found"));
             if (exist) score++;
         }

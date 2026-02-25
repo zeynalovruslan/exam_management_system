@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class AttemptSubmitRequestDto {
 
+    private Long attemptId;
     private List<AnswerDto> answers;
 
 }

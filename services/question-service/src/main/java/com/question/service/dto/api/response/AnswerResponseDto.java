@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class AnswerResponseDto {
-    private int totalQuestions;
-    private int correctAnswers;
-    private int score;
+    private Integer totalQuestions;
+    private Integer correctAnswers;
+    private Integer score;
 }

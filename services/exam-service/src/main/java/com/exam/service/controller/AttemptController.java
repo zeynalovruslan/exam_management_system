@@ -1,7 +1,10 @@
 package com.exam.service.controller;
 
 import com.exam.service.dto.api.request.AttemptStartRequestDto;
+import com.exam.service.dto.api.request.AttemptSubmitRequestDto;
+import com.exam.service.dto.api.response.AttemptResultResponseDto;
 import com.exam.service.dto.api.response.AttemptStartResponseDto;
+import com.exam.service.dto.api.response.AttemptSubmitResponseDto;
 import com.exam.service.service.AttemptService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +26,19 @@ public class AttemptController {
     @PostMapping("/start")
     public ResponseEntity<AttemptStartResponseDto> start(@RequestHeader("Authorization") String authorization,
                                                          @RequestBody AttemptStartRequestDto requestDto) {
-        AttemptStartResponseDto response = attemptService.start(authorization, requestDto);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(attemptService.start(authorization, requestDto));
     }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/submit")
+    public ResponseEntity<AttemptSubmitResponseDto> submit(@RequestBody AttemptSubmitRequestDto requestDto) {
+        return ResponseEntity.ok(attemptService.submit(requestDto));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/results/{attemptId}")
+    public ResponseEntity<AttemptResultResponseDto> getResult(@PathVariable Long attemptId) {
+        return ResponseEntity.ok(attemptService.getResult(attemptId));
+    }
+
 }

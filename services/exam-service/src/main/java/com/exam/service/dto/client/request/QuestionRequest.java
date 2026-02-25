@@ -1,9 +1,10 @@
-package com.exam.service.dto.api.request;
+package com.exam.service.dto.client.request;
 
 import lombok.Data;
 
 @Data
-public class AnswerDto {
+public class QuestionRequest {
+
     private Long questionId;
     private Long selectedOptionId;
 }

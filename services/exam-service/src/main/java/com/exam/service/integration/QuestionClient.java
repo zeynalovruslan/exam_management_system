@@ -2,8 +2,10 @@ package com.exam.service.integration;
 
 
 import com.exam.service.dto.client.request.QuestionGradeRequestDto;
+import com.exam.service.dto.client.request.QuestionResultRequestDto;
 import com.exam.service.dto.client.request.QuestionSelectionRequestDto;
 import com.exam.service.dto.client.response.QuestionGradeResponseDto;
+import com.exam.service.dto.client.response.QuestionResultResponseDto;
 import com.exam.service.dto.client.response.QuestionSelectionResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +22,10 @@ public interface QuestionClient {
                                                        @RequestHeader("Authorization") String authorization
     );
 
+    @PostMapping("/api/questions/grade")
+    QuestionGradeResponseDto grade(@RequestBody QuestionGradeRequestDto request);
 
-    @PostMapping("api/questions/grade")
-    List<QuestionGradeResponseDto> grade(@RequestBody QuestionGradeRequestDto request);
 
+    @PostMapping("/api/questions/result")
+    QuestionResultResponseDto getResult(@RequestBody QuestionResultRequestDto request);
 }

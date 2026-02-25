@@ -6,5 +6,5 @@ import lombok.Data;
 public class AnswerItemRequestDto {
 
     private Long questionId;
-    private Long optionId;
+    private Long selectedOptionId;
 }

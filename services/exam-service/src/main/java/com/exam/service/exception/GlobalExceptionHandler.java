@@ -35,5 +35,11 @@ public class GlobalExceptionHandler {
 
     }
 
+    @ExceptionHandler(NotFoundException.class)
+    public ErrorResponse handleNotFoundException(NotFoundException e) {
+        return ErrorResponse.builder(e,
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage())).build();
+    }
+
 
 }
