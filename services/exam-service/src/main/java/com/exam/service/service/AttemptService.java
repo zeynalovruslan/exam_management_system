@@ -8,7 +8,7 @@ import com.exam.service.dto.api.response.AttemptSubmitResponseDto;
 
 public interface AttemptService {
 
-    AttemptStartResponseDto start(String authHeader, AttemptStartRequestDto requestDto);
+    AttemptStartResponseDto start(AttemptStartRequestDto requestDto);
 
     AttemptSubmitResponseDto submit(AttemptSubmitRequestDto requestDto);
 

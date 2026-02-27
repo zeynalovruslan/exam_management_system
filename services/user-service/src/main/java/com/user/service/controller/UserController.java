@@ -5,6 +5,7 @@ import com.user.service.enums.UserRoleEnum;
 import com.user.service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<Void> setRoleAdmin(@PathVariable Long userId) {
         userService.setRoleAdmin(userId);
         return ResponseEntity.noContent().build();

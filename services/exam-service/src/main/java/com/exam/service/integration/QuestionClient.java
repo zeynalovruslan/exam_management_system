@@ -1,6 +1,7 @@
 package com.exam.service.integration;
 
 
+import com.exam.service.config.FeignAuthForwardConfig;
 import com.exam.service.dto.client.request.QuestionGradeRequestDto;
 import com.exam.service.dto.client.request.QuestionResultRequestDto;
 import com.exam.service.dto.client.request.QuestionSelectionRequestDto;
@@ -14,13 +15,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
-@FeignClient(name = "question-service", url = "${services.question-service.base-url}")
+@FeignClient(name = "question-service",
+        url = "${services.question-service.base-url}",
+        configuration = FeignAuthForwardConfig.class
+)
 public interface QuestionClient {
 
     @PostMapping("/api/questions")
-    List<QuestionSelectionResponseDto> selectQuestions(@RequestBody QuestionSelectionRequestDto requestDto,
-                                                       @RequestHeader("Authorization") String authorization
-    );
+    List<QuestionSelectionResponseDto> selectQuestions(@RequestBody QuestionSelectionRequestDto requestDto);
 
     @PostMapping("/api/questions/grade")
     QuestionGradeResponseDto grade(@RequestBody QuestionGradeRequestDto request);

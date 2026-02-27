@@ -27,6 +27,7 @@ import com.exam.service.repository.AttemptRepository;
 import com.exam.service.service.AttemptService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttemptServiceImpl implements AttemptService {
 
     private static final int DEFAULT_COUNT = 20;
@@ -50,21 +52,27 @@ public class AttemptServiceImpl implements AttemptService {
 
     @Transactional
     @Override
-    public AttemptStartResponseDto start(String authHeader, AttemptStartRequestDto requestBody) {
+    public AttemptStartResponseDto start(AttemptStartRequestDto requestBody) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || auth.getPrincipal() == null) {
+            log.warn("Attempt start denied: missing authentication");
             throw new UnauthorizedException("Unauthorized - authority is cannot be null");
         }
 
         String userId = auth.getPrincipal().toString();
 
         if (userId.isBlank()) {
+            log.warn("Attempt start denied: blank userId in principal");
             throw new UnauthorizedException("Unauthorized - user id can not be blank");
         }
 
+        log.info("Attempt start requested. topic={}, difficulty={}", requestBody.getTopic(), requestBody.getDifficulty());
+
+
         if (attemptRepository.existsByUserIdAndStatus(userId, AttemptStatusEnum.STARTED)) {
+            log.warn("Attempt start conflict: active STARTED attempt already exists");
             throw new ConflictException("Active attempt already exists");
         }
 
@@ -74,12 +82,16 @@ public class AttemptServiceImpl implements AttemptService {
         attemptEntity.setStartedAt(Instant.now());
         attemptRepository.save(attemptEntity);
 
+        log.info("Attempt created. attemptId={}, status={}", attemptEntity.getId(), attemptEntity.getStatus());
+
         QuestionSelectionRequestDto requestDto = new QuestionSelectionRequestDto();
         requestDto.setCount(DEFAULT_COUNT);
         requestDto.setTopic(requestBody.getTopic());
         requestDto.setDifficulty(requestBody.getDifficulty());
 
-        List<QuestionSelectionResponseDto> questions = questionClient.selectQuestions(requestDto, authHeader);
+        List<QuestionSelectionResponseDto> questions = questionClient.selectQuestions(requestDto);
+
+        log.info("Questions selected. attemptId={}, count={}", attemptEntity.getId(), questions.size());
 
         List<AttemptQuestionEntity> attemptQuestions = questions.stream().map(questionResponseDto -> {
             AttemptQuestionEntity attemptQuestionEntity = new AttemptQuestionEntity();
@@ -90,11 +102,15 @@ public class AttemptServiceImpl implements AttemptService {
 
         attemptQuestionRepository.saveAll(attemptQuestions);
 
+        log.info("Attempt questions saved. attemptId={}, rows={}", attemptEntity.getId(), attemptQuestions.size());
+
         AttemptStartResponseDto response = new AttemptStartResponseDto();
         response.setId(attemptEntity.getId());
         response.setStatus(attemptEntity.getStatus().name());
         response.setStartedAt(attemptEntity.getStartedAt());
         response.setQuestions(questions);
+
+        log.info("Attempt start completed. attemptId={}", attemptEntity.getId());
 
         return response;
     }
@@ -106,12 +122,14 @@ public class AttemptServiceImpl implements AttemptService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || auth.getPrincipal() == null) {
+            log.warn("Attempt submit denied: missing authentication");
             throw new UnauthorizedException("Unauthorized - authority is cannot be null");
         }
 
         String userId = auth.getPrincipal().toString();
 
         if (userId.isBlank()) {
+            log.warn("Attempt submit denied: blank userId in principal");
             throw new UnauthorizedException("Unauthorized - user id can not be blank");
         }
 
@@ -141,6 +159,8 @@ public class AttemptServiceImpl implements AttemptService {
         Set<Long> set = new HashSet<>();
         for (AnswerDto answerDto : requestDto.getAnswers()) {
             if (!set.add(answerDto.getQuestionId())) {
+                log.warn("Attempt submit conflict: duplicated answer questionId. questionId={}",
+                        answerDto.getQuestionId());
                 throw new ConflictException("Answer id " + answerDto.getQuestionId() + " is duplicated");
             }
         }
@@ -153,6 +173,8 @@ public class AttemptServiceImpl implements AttemptService {
             attemptQuestionEntity.setSelectedOptionId(answerDto.getSelectedOptionId());
         }
         attemptQuestionRepository.saveAll(attemptQuestionList);
+        log.info("Attempt answers saved. answers={}", requestDto.getAnswers().size());
+
 
         QuestionGradeRequestDto gradeRequestDto = new QuestionGradeRequestDto();
 
@@ -214,28 +236,37 @@ public class AttemptServiceImpl implements AttemptService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || auth.getPrincipal() == null) {
+            log.warn("Attempt result denied: missing authentication. attemptId={}", attemptId);
             throw new UnauthorizedException("Unauthorized - authority is cannot be null");
         }
 
         String userId = auth.getPrincipal().toString();
 
         if (userId.isBlank()) {
+            log.warn("Attempt result denied: blank userId in principal. attemptId={}", attemptId);
             throw new UnauthorizedException("Unauthorized - user id can not be blank");
         }
+
+        log.info("Attempt result requested. attemptId={}", attemptId);
 
         AttemptEntity attemptEntity = attemptRepository.findById(attemptId).orElseThrow(() ->
                 new NotFoundException("Attempt with id " + attemptId + " not found"));
 
         if (!userId.equals(attemptEntity.getUserId())) {
+            log.warn("Attempt result denied: attempt does not belong to user. attemptId={}, ownerUserId={}",
+                    attemptId, attemptEntity.getUserId());
             throw new UnauthorizedException("Attempt does not belong to current user");
         }
 
         if (!attemptEntity.getStatus().equals(AttemptStatusEnum.SUBMITTED)) {
+            log.warn("Attempt result conflict: attempt not SUBMITTED. attemptId={}, status={}",
+                    attemptId, attemptEntity.getStatus());
             throw new ConflictException("Attempt must be SUBMITTED");
         }
 
         List<AttemptQuestionEntity> attemptQuestion = attemptQuestionRepository.findByAttemptId(attemptId);
         if (attemptQuestion.isEmpty()) {
+            log.error("Attempt result failed: attempt has no questions. attemptId={}", attemptId);
             throw new NotFoundException("Attempt question has no questions: " + attemptId);
         }
 
@@ -251,6 +282,14 @@ public class AttemptServiceImpl implements AttemptService {
         requestDto.setRequests(questionRequestList);
 
         QuestionResultResponseDto questionResult = questionClient.getResult(requestDto);
+
+        log.info("Attempt result fetched from question-service. attemptId={}, total={}, correct={}, wrong={}, score={}",
+                attemptId,
+                questionResult.getTotalQuestions(),
+                questionResult.getCorrectAnswer(),
+                questionResult.getWrongAnswer(),
+                questionResult.getScore()
+        );
 
         List<ResultResponse> questionResponseList = questionResult.getQuestions().stream().map(questionResponse -> {
             ResultResponse resultResponse = new ResultResponse();
@@ -270,6 +309,7 @@ public class AttemptServiceImpl implements AttemptService {
         attemptResultResponseDto.setWrongAnswerCount(questionResult.getWrongAnswer());
         attemptResultResponseDto.setCorrectAnswerCount(questionResult.getCorrectAnswer());
 
+        log.info("Attempt result completed. attemptId={}", attemptId);
         return attemptResultResponseDto;
     }
 }
