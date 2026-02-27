@@ -24,9 +24,9 @@ public class AttemptController {
 
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/start")
-    public ResponseEntity<AttemptStartResponseDto> start(@RequestHeader("Authorization") String authorization,
-                                                         @RequestBody AttemptStartRequestDto requestDto) {
-        return ResponseEntity.ok(attemptService.start(authorization, requestDto));
+    public ResponseEntity<AttemptStartResponseDto> start(
+            @RequestBody AttemptStartRequestDto requestDto) {
+        return ResponseEntity.ok(attemptService.start(requestDto));
     }
 
     @SecurityRequirement(name = "bearerAuth")
