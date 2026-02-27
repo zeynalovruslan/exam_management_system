@@ -211,9 +211,32 @@ public class AttemptServiceImpl implements AttemptService {
     @Override
     public AttemptResultResponseDto getResult(Long attemptId) {
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new UnauthorizedException("Unauthorized - authority is cannot be null");
+        }
+
+        String userId = auth.getPrincipal().toString();
+
+        if (userId.isBlank()) {
+            throw new UnauthorizedException("Unauthorized - user id can not be blank");
+        }
+
+        AttemptEntity attemptEntity = attemptRepository.findById(attemptId).orElseThrow(() ->
+                new NotFoundException("Attempt with id " + attemptId + " not found"));
+
+        if (!userId.equals(attemptEntity.getUserId())) {
+            throw new UnauthorizedException("Attempt does not belong to current user");
+        }
+
+        if (!attemptEntity.getStatus().equals(AttemptStatusEnum.SUBMITTED)) {
+            throw new ConflictException("Attempt must be SUBMITTED");
+        }
+
         List<AttemptQuestionEntity> attemptQuestion = attemptQuestionRepository.findByAttemptId(attemptId);
         if (attemptQuestion.isEmpty()) {
-            throw new NotFoundException("Attempt has no questions: " + attemptId);
+            throw new NotFoundException("Attempt question has no questions: " + attemptId);
         }
 
         List<QuestionRequest> questionRequestList = attemptQuestion.stream()
