@@ -1,11 +1,11 @@
 Exam Management System
 Layihə haqqında
 
-Exam Management System — Spring Boot əsasında hazırlanmış microservices arxitekturalı backend tətbiqidir. Sistem istifadəçilərin imtahanlara daxil olması, sualların seçilməsi, cavabların göndərilməsi və nəticələrin hesablanması üçün nəzərdə tutulmuşdur.
+Exam Management System — Spring Boot əsasında hazırlanmış microservices əsaslı backend tətbiqidir. Sistem istifadəçilərin imtahanlara daxil olması, sualların seçilməsi, cavabların göndərilməsi və nəticələrin hesablanması üçün nəzərdə tutulmuşdur.
 
-Layihə real backend sistemlərdə istifadə olunan microservices arxitekturası, JWT authentication, service-to-service communication və DTO pattern kimi prinsiplərə uyğun şəkildə qurulmuşdur.
+Layihə real backend arxitektura prinsiplərinə uyğun şəkildə qurulmuşdur və JWT authentication, service-to-service communication və DTO pattern kimi mexanizmləri əhatə edir.
 
-Bu layihənin məqsədi imtahan idarəetmə sisteminin backend hissəsinin microservices yanaşması ilə necə qurulduğunu nümayiş etdirməkdir.
+Bu layihənin məqsədi microservices arxitekturası ilə qurulmuş imtahan idarəetmə sisteminin backend hissəsini nümayiş etdirməkdir.
 
 İstifadə olunan texnologiyalar
 
@@ -19,7 +19,7 @@ Spring Data JPA
 
 MySQL
 
-OpenFeign (service-to-service communication)
+OpenFeign
 
 JWT Authentication
 
@@ -45,80 +45,33 @@ Cavabların avtomatik yoxlanılması
 
 İmtahan nəticəsinin hesablanması
 
-Microservices arasında servis kommunikasiya
+Microservices arasında servis kommunikasiyası
 
-DTO əsaslı API strukturu
+DTO və API strukturu
 
 Global exception handling
 
 Arxitektura
 
-Layihə microservices architecture istifadə edir və sistem bir neçə müstəqil servisdən ibarətdir.
+Layihədə microservices architecture istifadə olunmuşdur:
 
-Servislər:
-
-User Service
-
-Exam Service
-
-Question Service
+User Service → Exam Service → Question Service
 
 Servislər bir-biri ilə OpenFeign vasitəsilə əlaqə saxlayır.
 
-Authentication JWT token vasitəsilə həyata keçirilir.
+Entity və API modelləri bir-birindən DTO pattern vasitəsilə ayrılmışdır.
 
-Servislərin rolu
-User Service
-
-İstifadəçi idarəetməsi və autentifikasiya üçün istifadə olunur.
-
-Funksiyalar:
-
-istifadəçi qeydiyyatı
-
-login
-
-JWT token yaradılması
-
-istifadəçi məlumatlarının idarə olunması
-
-Exam Service
-
-İmtahan prosesinin idarə olunmasına cavabdehdir.
-
-Funksiyalar:
-
-imtahan attempt yaradılması
-
-question service-dən sualların alınması
-
-istifadəçi cavablarının qəbul edilməsi
-
-nəticənin hesablanması
-
-Question Service
-
-Sualların saxlanması və cavabların yoxlanılması üçün istifadə olunur.
-
-Funksiyalar:
-
-sualların saxlanması
-
-random sual seçimi
-
-cavabların yoxlanılması
-
-nəticə üçün məlumatın qaytarılması
+Spring Security autentifikasiya və avtorizasiya üçün istifadə olunur.
 
 Biznes məntiqi
 
-Sistem aşağıdakı ssenariyə əsasən işləyir:
+Sistem aşağıdakı ssenarini dəstəkləyir:
 
 İstifadəçi sistemə daxil olur
 
 İstifadəçi imtahan başlatır
 
-Sistem uyğun mövzu və çətinlik üzrə sualları seçir
+Sistem mövzu və çətinlik səviyyəsinə uyğun sualları seçir
 
 İstifadəçiyə suallar təqdim olunur
 
@@ -126,44 +79,43 @@ Sistem uyğun mövzu və çətinlik üzrə sualları seçir
 
 Sistem cavabları yoxlayır
 
-İmtahan nəticəsi hesablanır və istifadəçiyə təqdim olunur
+Nəticə hesablanır və istifadəçiyə təqdim olunur
 
 Project strukturu
 services
  ├── user-service
  ├── exam-service
  └── question-service
-
-Hər servis ayrıca Spring Boot tətbiqi kimi işləyir.
-
 Layihəni işə salmaq
 Repository-ni klonla
 git clone https://github.com/zeynalovruslan/exam_management_system
 Build et
 mvn clean install
-Servisləri run et
+Run et
+mvn spring-boot:run
 
-Hər servis ayrıca run edilir.
+və ya servisləri ayrıca işə salmaq mümkündür.
 
-cd services/user-service
-mvn spring-boot:run
-cd services/exam-service
-mvn spring-boot:run
-cd services/question-service
-mvn spring-boot:run
+Database konfiqurasiyası
+
+Database ayarları aşağıdakı fayllarda yerləşir:
+
+application.yml
+
+Hər servis öz database konfiqurasiyasına malikdir.
+
 Security
 
-Spring Security və JWT istifadə olunaraq aşağıdakı mexanizmlər implementasiya edilmişdir:
+Spring Security istifadə olunaraq:
 
 Authentication
 
-Token əsaslı təhlükəsizlik
+JWT əsaslı təhlükəsizlik
 
 Protected API endpoint-lər
 
-Protected endpoint-lərə request göndərərkən aşağıdakı header istifadə olunur:
+implementasiya edilmişdir.
 
-Authorization: Bearer TOKEN
 Müəllif
 
 Ruslan Zeynalov
