@@ -108,7 +108,7 @@ və ya servisləri ayrıca işə salmaq mümkündür.
 Database ayarları aşağıdakı fayllarda yerləşir:
 
 ```
-application.yml
+application.properties
 ```
 
 Hər servis öz database konfiqurasiyasına malikdir.
